@@ -1,0 +1,26 @@
+[Unit]
+Description=OpenAI Secure MCP Tunnel for Exomem
+After=network-online.target mihomo-cloudflared.service exomem.service
+Wants=network-online.target
+Requires=exomem.service
+ConditionPathExists=/etc/exomem/tunnel.env
+
+[Service]
+Type=simple
+DynamicUser=true
+StateDirectory=exomem-tunnel
+Environment=HOME=/var/lib/exomem-tunnel
+EnvironmentFile=/etc/exomem/tunnel.env
+ExecStart=/opt/exomem/bin/tunnel-client run --control-plane.api-key=env:CONTROL_PLANE_API_KEY --control-plane.http-proxy=http://127.0.0.1:17890 --mcp.server-url=http://127.0.0.1:3211/mcp --health.listen-addr=127.0.0.1:3212 --mcp.startup-wait-timeout=30s
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+IPAddressDeny=any
+IPAddressAllow=localhost
+MemoryMax=384M
+
+[Install]
+WantedBy=multi-user.target

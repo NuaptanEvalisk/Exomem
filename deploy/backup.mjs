@@ -1,0 +1,10 @@
+import Database from 'better-sqlite3';
+import { mkdirSync } from 'node:fs';
+const database = process.env.EXOMEM_DATABASE ?? '/data/exomem.sqlite';
+const directory = process.env.EXOMEM_BACKUP_DIR ?? '/data/backups';
+mkdirSync(directory, { recursive: true });
+const db = new Database(database, { readonly: true });
+const path = `${directory}/exomem-${new Date().toISOString().replaceAll(':', '-')}.sqlite`;
+await db.backup(path);
+db.close();
+console.log(path);

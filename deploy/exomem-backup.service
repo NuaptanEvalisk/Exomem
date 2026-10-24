@@ -1,0 +1,8 @@
+[Unit]
+Description=Consistent Exomem database backup
+Requires=exomem.service
+After=exomem.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman exec exomem node /app/backup.mjs

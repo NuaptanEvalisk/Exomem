@@ -1,0 +1,27 @@
+[Unit]
+Description=Exomem memory service
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=localhost/exomem:current
+ContainerName=exomem
+Pull=never
+PublishPort=127.0.0.1:3210:3210
+PublishPort=127.0.0.1:3211:3211
+Volume=/var/lib/exomem:/data:Z
+EnvironmentFile=/etc/exomem/app.env
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=all
+PodmanArgs=--pids-limit=128
+
+[Service]
+Restart=on-failure
+RestartSec=5
+MemoryMax=768M
+CPUQuota=100%
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
