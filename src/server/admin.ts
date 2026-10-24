@@ -20,12 +20,10 @@ export function adminApp(store: Store) {
         .code(400)
         .send({ code: "INVALID_INPUT", message: z.prettifyError(error) });
     console.error(error.message);
-    return reply
-      .code(500)
-      .send({
-        code: "INTERNAL_ERROR",
-        message: "The operation did not complete. Check the service logs.",
-      });
+    return reply.code(500).send({
+      code: "INTERNAL_ERROR",
+      message: "The operation did not complete. Check the service logs.",
+    });
   });
   app.addHook("onRequest", async (req, reply) => {
     if (!req.url.startsWith("/api/")) return;
@@ -39,7 +37,10 @@ export function adminApp(store: Store) {
         "http://localhost:5173",
         `http://${req.headers.host}`,
       ];
-      if (origin && !(allowed ? origin === allowed : local.includes(origin)))
+      const origins = allowed
+        ? [allowed, "http://127.0.0.1:3210", "http://localhost:3210"]
+        : local;
+      if (origin && !origins.includes(origin))
         throw new AppError(
           "ORIGIN_MISMATCH",
           "Please perform this action from the Exomem WebUI.",

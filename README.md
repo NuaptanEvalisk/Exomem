@@ -2,6 +2,8 @@
 
 自托管的跨对话记忆库。通过私有 MCP Plugin 为 ChatGPT 提供 timeline 和 notes；通过 WebUI 管理空间、凭据和记忆。
 
+WebUI 全部使用 English；记忆内容支持 Unicode。部署后的账户配置步骤见 [SETUP.md](SETUP.md)。
+
 ## 功能
 
 - 多个独立 spaces；每个 space 可创建多个 UUID `token.txt`，可暂停、恢复、永久废止。
