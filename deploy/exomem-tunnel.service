@@ -18,8 +18,8 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-IPAddressDeny=any
-IPAddressAllow=localhost
+# Do not restrict IP traffic to loopback: Podman forwards the local MCP port
+# through its bridge. OpenAI traffic uses the explicit control-plane proxy above.
 MemoryMax=384M
 
 [Install]

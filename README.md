@@ -73,7 +73,7 @@ CONTROL_PLANE_TUNNEL_ID=tunnel_...
 CONTROL_PLANE_API_KEY=...
 ```
 
-实际安装时以该版本的 `tunnel-client help quickstart` / `doctor` 核对 CLI。控制面显式经 mihomo 的 `http://127.0.0.1:17890` 出站；本地 MCP 直连。服务的出站 IP 限制只允许回环，防止代理失效后直接出网。凭据必须关联目标 Platform organization 和 ChatGPT workspace。
+实际安装时以该版本的 `tunnel-client help quickstart` / `doctor` 核对 CLI。控制面显式经 mihomo 的 `http://127.0.0.1:17890` 出站；本地 MCP 通过 Podman 发布的回环端口连接。不要对 Tunnel 服务设置仅允许回环地址的 systemd IP 过滤：Podman 的桥接转发会被该限制拦截，造成访问本地 MCP 超时。凭据必须关联目标 Platform organization 和 ChatGPT workspace。
 
 官方文档：[Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)。完成配置后，必须从 ChatGPT 做一次真实工具调用才算完成端到端接入。
 

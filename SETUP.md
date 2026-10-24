@@ -39,6 +39,8 @@ journalctl -u exomem-tunnel.service -n 40 --no-pager
 
 The local tunnel health UI is on `127.0.0.1:3212`; the service sends its OpenAI traffic through mihomo at `127.0.0.1:17890`.
 
+If OAuth discovery reports a timeout reaching `127.0.0.1:3211`, check the local MCP hop separately from the outbound proxy. A loopback-only systemd `IPAddressAllow` filter blocks Podman's bridge forwarding even though the published port uses a loopback address; the supplied unit intentionally omits that filter. `/healthz` only confirms that the tunnel process is alive; use `/readyz` to check readiness.
+
 ## 3. Connect ChatGPT and create your first memory space
 
 In [ChatGPT Plugins](https://chatgpt.com/plugins): add a **custom MCP server**, choose **Tunnel**, select the Exomem tunnel, and select **No authentication** at the transport level. Space authorization is enforced separately by the required token argument on every memory tool. Create and install the plugin.
