@@ -91,8 +91,11 @@ export class Store {
     ).map((r) => this.spaceRow(r));
   }
   space(id: string): Space {
-    const row = this.db.prepare("SELECT * FROM spaces WHERE id=?").get(id) as
-      Row | undefined;
+    const row = this.db
+      .prepare(
+        `SELECT s.*, (SELECT count(*) FROM entries WHERE space_id=s.id AND kind='note' AND deleted_at IS NULL) notes, (SELECT count(*) FROM entries WHERE space_id=s.id AND kind='timeline' AND deleted_at IS NULL) timeline FROM spaces s WHERE s.id=?`,
+      )
+      .get(id) as Row | undefined;
     if (!row) throw new AppError("NOT_FOUND", "Space not found.", 404);
     return this.spaceRow(row);
   }

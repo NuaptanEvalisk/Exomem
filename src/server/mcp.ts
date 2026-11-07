@@ -33,6 +33,15 @@ const summary = (entry: Entry) => ({
   contentTruncated: entry.content.length > 300,
 });
 
+// ChatGPT's MCP result adapter can mistake a record's top-level `content`
+// for the protocol's `content` blocks and discard the record. Keep the DB,
+// WebUI, and search previews unchanged; rename only top-level MCP records.
+function publicToolResult(name: string, value: unknown): unknown {
+  if (!/^(notes|timeline)_(get|create|update|delete)$/.test(name)) return value;
+  const { content, ...record } = value as Entry;
+  return { ...record, recordText: content };
+}
+
 export function createMcp(store: Store) {
   const server = new McpServer(
     { name: "Exomem", version: "0.1.0" },
@@ -64,7 +73,7 @@ export function createMcp(store: Store) {
         try {
           const actor: Actor = { type: "token", token: String(args.token) };
           const auth = store.authorize(actor, undefined, !read);
-          const value = fn(args, actor, auth.spaceId);
+          const value = publicToolResult(name, fn(args, actor, auth.spaceId));
           return {
             content: [{ type: "text" as const, text: JSON.stringify(value) }],
           };
@@ -117,7 +126,7 @@ export function createMcp(store: Store) {
     const prefix = kind === "note" ? "notes" : "timeline";
     tool(
       `${prefix}_search`,
-      `Search ${kind === "note" ? "notes by title, tags and content" : "events by description and time"}. q is a literal Unicode substring, including one-character CJK. Empty q lists records. Date bounds are inclusive; provide instantFrom/instantTo with offsets for local-day filtering. Results contain previews; use ${prefix}_get for content.`,
+      `Search ${kind === "note" ? "notes by title, tags and content" : "events by description and time"}. q is a literal Unicode substring, including one-character CJK. Empty q lists records. Date bounds are inclusive; provide instantFrom/instantTo with offsets for local-day filtering. Results contain previews; use ${prefix}_get for the complete body in recordText.`,
       searchSchema.omit({ kind: true, deleted: true }).extend({ token }),
       true,
       (args, _, spaceId) => {
@@ -127,7 +136,7 @@ export function createMcp(store: Store) {
     );
     tool(
       `${prefix}_get`,
-      "Read one record and its revision. Long content is paginated; follow nextOffset until null. Offsets use JavaScript UTF-16 string positions.",
+      "Read one record and its revision. The full or paginated body is in recordText (not content); follow nextOffset until null. Offsets use JavaScript UTF-16 string positions.",
       z.object({
         token,
         id,
@@ -174,7 +183,7 @@ export function createMcp(store: Store) {
           };
     tool(
       `${prefix}_create`,
-      "Save a new record. Returns the committed record and revision. Reuse request_id for an unchanged retry.",
+      "Save a new record. Returns the committed record (body in recordText) and revision. Reuse request_id for an unchanged retry.",
       z.object({ token, request_id, ...fields }),
       false,
       (args, actor, spaceId) =>
@@ -182,7 +191,7 @@ export function createMcp(store: Store) {
     );
     tool(
       `${prefix}_update`,
-      "Replace a record’s editable fields. Read first, preserve content that should remain, and supply expected_revision. A conflict makes no changes.",
+      "Replace a record’s editable fields. Read first, preserve content that should remain, and supply expected_revision. Returns the record with its body in recordText. A conflict makes no changes.",
       z.object({ token, request_id, id, expected_revision, ...fields }),
       false,
       (args, actor, spaceId) => {
@@ -200,7 +209,7 @@ export function createMcp(store: Store) {
     );
     tool(
       `${prefix}_delete`,
-      "Move a record to the recycle bin. Recoverable in the WebUI; requires the current revision.",
+      "Move a record to the recycle bin. Recoverable in the WebUI; requires the current revision. Returns the record with its body in recordText.",
       z.object({ token, request_id, id, expected_revision }),
       false,
       (args, actor, spaceId) => {
